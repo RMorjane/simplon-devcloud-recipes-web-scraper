@@ -1,0 +1,7 @@
+Jinja2==2.10.1
+mysql-connector-python==8.0.23
+mysqlclient==2.0.3
+requests==2.22.0
+template-render==0.1.0
+bs4==0.0.1
+flask==1.1.2
