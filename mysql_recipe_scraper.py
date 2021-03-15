@@ -33,7 +33,7 @@ class RecipeCategory:
     def save_mysql_recipe(self):
         mysql_recipe = MySQLRecipe()
         mysql_recipe.set_logger()
-        if mysql_recipe.connect() and mysql_recipe.create_database():
+        if mysql_recipe.connect():
             for loop_link in self.links:
                 print(loop_link["href"])
                 recipe_info = RecipeInfo(loop_link["href"],mysql_recipe)
@@ -44,6 +44,7 @@ class RecipeInfo:
 
     def __init__(self,href,mysql_recipe):
         self.recipe_url = "https://www.atelierdeschefs.fr" + href
+        self.recipe_id = 0
         self.recipe_name = ""
         self.recipe_image = ""
         self.persons_count = 0
@@ -71,12 +72,11 @@ class RecipeInfo:
 
         if self.mysql_recipe.connection:
             sql_recipe_id = self.mysql_recipe.get_recipe_id(self.recipe_name)
-            recipe_id = 0
             if sql_recipe_id and type(sql_recipe_id)==tuple:
-                recipe_id = sql_recipe_id[0]
-                print(recipe_id," : ",self.recipe_name," already exists")
+                self.recipe_id = sql_recipe_id[0]
+                print(self.recipe_id," : ",self.recipe_name," already exists")
             else:
-                recipe_id = self.mysql_recipe.add_recipe(self.recipe_name,self.recipe_url,self.recipe_image)
+                self.recipe_id = self.mysql_recipe.add_recipe(self.recipe_name,self.recipe_url,self.recipe_image)
 
                 usage = "ingredient"
                 list_li = soup.find_all("li")
@@ -98,10 +98,11 @@ class RecipeInfo:
 
                         unit = list_quantity[1]
 
-                        self.mysql_recipe.add_recipe_ingredient(recipe_id,ingredient_id,usage_id,self.persons_count,quantity,unit)
+                        self.mysql_recipe.add_recipe_ingredient(self.recipe_id,ingredient_id,usage_id,self.persons_count,quantity,unit)
 
                         self.list_ingredients.append(
                             {
+                                "recipe_id": self.recipe_id,
                                 "usage": usage,
                                 "persons_count": self.persons_count,
                                 "ingredient": ingredient,
@@ -155,8 +156,8 @@ class MySQLRecipe:
             )
             self.logger.info("Connexion réussie : " + str(self.connection))
             return True
-        except (Exception, psycopg2.Error) as error:
-            print("Impossible de se connecter au serveur postgres : " + str(error))
+        except (Exception, mysql.connector.Error) as error:
+            print("Impossible de se connecter au serveur mysql : " + str(error))
             return False
 
     def create_database(self):
@@ -349,4 +350,4 @@ class MySQLRecipe:
         file_handler = RotatingFileHandler('log.txt', 'a', 1000000, 1)
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(formatter)
-        self.logger.addHandler(file_handler)
+        self.logger.addHandler(file_handler)                  
