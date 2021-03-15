@@ -6,7 +6,7 @@ services:
     container_name: mysql_db
     image: mysql:8.0.21
     restart: always
-    env_file: env
+    env_file: .env
     networks: 
       - myrecipes
   
@@ -16,12 +16,12 @@ services:
     depends_on: 
       - db   
     ports:
-      - 4001:3001
+      - 3000:3000
     volumes:
       - .:/app
     networks:
       - myrecipes
-    command: sh -c "python main.py"
+    command: sh -c "python /app/main.py"
 
 networks: 
   myrecipes: {}
